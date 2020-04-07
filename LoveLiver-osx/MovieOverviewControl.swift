@@ -26,7 +26,7 @@ class MovieOverviewControl: NSView {
         tf.isBezeled = false
         tf.isEditable = false
         tf.drawsBackground = true
-        tf.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: NSFontWeightRegular)
+        tf.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: NSFont.Weight.regular)
         tf.textColor = NSColor.white
         tf.backgroundColor = NSColor.black
     }
@@ -85,8 +85,8 @@ class MovieOverviewControl: NSView {
         autolayout("H:|[currentTime]")
         autolayout("V:[currentTime]|")
 
-        setContentCompressionResistancePriority(NSLayoutPriorityDefaultHigh, for: .vertical)
-        setContentHuggingPriority(NSLayoutPriorityDefaultHigh, for: .vertical)
+        setContentCompressionResistancePriority(NSLayoutConstraint.Priority.defaultHigh, for: .vertical)
+        setContentHuggingPriority(NSLayoutConstraint.Priority.defaultHigh, for: .vertical)
 
         // subviews ordering
         addSubview(scopeMaskLeftView)
@@ -218,7 +218,9 @@ class MovieOverviewControl: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         NSColor.black.setFill()
-        NSRectFillUsingOperation(dirtyRect, .copy)
+        dirtyRect.fill(using: .copy)
+
+        //NSRectFillUsingOperation(dirtyRect, .copy)
 
         var x: CGFloat = 0
         for t in thumbnails {

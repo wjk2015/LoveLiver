@@ -16,7 +16,7 @@ class MovieOverviewViewController: NSViewController {
     
     init(player: AVPlayer, playerItem: AVPlayerItem) {
         self.overview = MovieOverviewControl(player: player, playerItem: playerItem)
-        super.init(nibName: nil, bundle: nil)!
+        super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) {

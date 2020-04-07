@@ -20,7 +20,7 @@ protocol OverviewTouchBarItemProviderType : class {
     var dragging : Bool { get }
 
     @available(OSX 10.12.2, *)
-    func makeTouchbarItem(identifier: NSTouchBarItemIdentifier) -> NSTouchBarItem
+    func makeTouchbarItem(identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem
 }
 
 @available(OSX 10.12.2, *)
@@ -46,7 +46,7 @@ class OverviewTouchBarItemProvider : NSViewController, OverviewTouchBarItemProvi
         self.overview = MovieOverviewControl(player: player, playerItem: playerItem)
         self.overview.draggingMode = .scope
         self.overview.imageGeneratorTolerance = kCMTimeZero
-        super.init(nibName: nil, bundle: nil)!
+        super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) {
@@ -54,7 +54,7 @@ class OverviewTouchBarItemProvider : NSViewController, OverviewTouchBarItemProvi
     }
 
 
-    func makeTouchbarItem(identifier: NSTouchBarItemIdentifier) -> NSTouchBarItem {
+    func makeTouchbarItem(identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem {
         return NSCustomTouchBarItem(identifier: identifier) ※ { item in
             item.viewController = self
         }

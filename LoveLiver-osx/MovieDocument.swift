@@ -58,7 +58,8 @@ class MovieDocument: NSDocument, NSWindowDelegate {
         overviewVC = MovieOverviewViewController(player: player!, playerItem: playerItem!)
         overviewWindow = NSWindow(contentViewController: overviewVC!) ※ { w in
             w.delegate = self
-            w.styleMask = NSResizableWindowMask
+            w.styleMask = NSWindow.StyleMask.init()
+            //w.styleMask = NSResizableWindowMask
         }
         addWindowController(NSWindowController(window: overviewWindow))
         mainWindow!.addChildWindow(overviewWindow!, ordered: .above)

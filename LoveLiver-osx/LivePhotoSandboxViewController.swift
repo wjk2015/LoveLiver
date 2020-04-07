@@ -13,11 +13,13 @@ import NorthLayout
 import Ikemen
 
 
-private let livePhotoDuration: TimeInterval = 3
+private var livePhotoDuration: TimeInterval = 3
 private let outputDir = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Pictures/LoveLiver")
 
-fileprivate extension NSTouchBarItemIdentifier {
-    static let overview = NSTouchBarItemIdentifier("jp.mzp.loveliver.overview")
+@available(OSX 10.12.2, *)
+fileprivate extension NSTouchBarItem.Identifier {
+    @available(OSX 10.12.2, *)
+    static let overview = NSTouchBarItem.Identifier("jp.mzp.loveliver.overview")
 }
 
 private func label() -> NSTextField {
@@ -26,12 +28,12 @@ private func label() -> NSTextField {
         tf.isEditable = false
         tf.drawsBackground = false
         tf.textColor = NSColor.gray
-        tf.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: NSFontWeightRegular)
+        tf.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: NSFont.Weight.regular)
     }
 }
 
 class LivePhotoSandboxViewController: NSViewController, NSTouchBarDelegate {
-    fileprivate let baseFilename: String
+    fileprivate var baseFilename: String
     fileprivate lazy var exportButton: NSButton = NSButton() ※ { b in
         b.bezelStyle = .regularSquare
         b.title = "Create Live Photo"
@@ -46,7 +48,7 @@ class LivePhotoSandboxViewController: NSViewController, NSTouchBarDelegate {
         b.target = self
         b.action = #selector(self.close)
     }
-    var closeAction: ((Void) -> Void)?
+    var closeAction: (() -> Void)?
 
     fileprivate func updateButtons() {
         exportButton.isEnabled = (exportSession == nil)
@@ -140,6 +142,7 @@ class LivePhotoSandboxViewController: NSViewController, NSTouchBarDelegate {
         self.baseFilename = baseFilename
         posterTime = CMTimeConvertScale(player.currentTime(), max(600, player.currentTime().timescale), .default) // timescale = 1 (too inaccurate) when posterTime = 0
         let duration = item.duration
+        livePhotoDuration = duration.seconds
         let offset = CMTime(seconds: livePhotoDuration / 2, preferredTimescale: posterTime.timescale)
         startTime = CMTimeMaximum(kCMTimeZero, CMTimeSubtract(posterTime, offset))
         endTime = CMTimeMinimum(CMTimeAdd(posterTime, offset), duration)
@@ -283,10 +286,14 @@ class LivePhotoSandboxViewController: NSViewController, NSTouchBarDelegate {
             baseFilename,
             posterTime.stringInmmmsssSS,
             assetIdentifier].joined(separator: "-")
+        baseFilename = baseFilename.replacingOccurrences(of: ".MOV", with: "")
+        baseFilename = baseFilename.replacingOccurrences(of: ".mov", with: "")
+        baseFilename = baseFilename.replacingOccurrences(of: ".MP4", with: "")
+        baseFilename = baseFilename.replacingOccurrences(of: ".mp4", with: "")
         let tmpImagePath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("\(basename).tiff").path
         let tmpMoviePath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("\(basename).mov").path
         let imagePath = outputDir.appendingPathComponent("\(basename).JPG").path
-        let moviePath = outputDir.appendingPathComponent("\(basename).MOV").path
+        let moviePath = outputDir.appendingPathComponent("\(baseFilename).MOV").path
         let paths = [tmpImagePath, tmpMoviePath, imagePath, moviePath]
 
         for path in paths {
@@ -297,7 +304,7 @@ class LivePhotoSandboxViewController: NSViewController, NSTouchBarDelegate {
         guard let _ = try? image.tiffRepresentation?.write(to: URL(fileURLWithPath: tmpImagePath), options: [.atomic]) else { return }
         // create AVAssetExportSession each time because it cannot be reused after export completion
         guard let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetPassthrough) else { return }
-        session.outputFileType = "com.apple.quicktime-movie"
+        session.outputFileType = AVFileType(rawValue: "com.apple.quicktime-movie")
         session.outputURL = URL(fileURLWithPath: tmpMoviePath)
         session.timeRange = CMTimeRange(start: startTime, end: endTime)
         session.exportAsynchronously {
@@ -327,16 +334,16 @@ class LivePhotoSandboxViewController: NSViewController, NSTouchBarDelegate {
     }
 
     fileprivate func showInFinderAndOpenInPhotos(_ fileURLs: [URL]) {
-        NSWorkspace.shared().activateFileViewerSelecting(fileURLs)
+        NSWorkspace.shared.activateFileViewerSelecting(fileURLs)
 
         // wait until Finder is active or timed out,
         // to avoid openURLs overtaking Finder activation
         DispatchQueue.global(qos: .default).async {
             let start = Date()
-            while NSWorkspace.shared().frontmostApplication?.bundleIdentifier != "com.apple.finder" && Date().timeIntervalSince(start) < 5 {
+            while NSWorkspace.shared.frontmostApplication?.bundleIdentifier != "com.apple.finder" && Date().timeIntervalSince(start) < 5 {
                 Thread.sleep(forTimeInterval: 0.1)
             }
-            NSWorkspace.shared().open(fileURLs, withAppBundleIdentifier: "com.apple.Photos", options: [], additionalEventParamDescriptor: nil, launchIdentifiers: nil)
+            NSWorkspace.shared.open(fileURLs, withAppBundleIdentifier: "com.apple.Photos", options: [], additionalEventParamDescriptor: nil, launchIdentifiers: nil)
         }
     }
 
@@ -380,7 +387,7 @@ class LivePhotoSandboxViewController: NSViewController, NSTouchBarDelegate {
     }
 
     @available(OSX 10.12.2, *)
-    func touchBar(_ touchBar: NSTouchBar, makeItemForIdentifier identifier: NSTouchBarItemIdentifier) -> NSTouchBarItem? {
+    func touchBar(_ touchBar: NSTouchBar, makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
         if identifier == .overview {
             return touchBarItemProvider?.makeTouchbarItem(identifier: identifier)
         } else {
